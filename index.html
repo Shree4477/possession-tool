@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Possession QC Tool</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Primary Toolbar -->
+  <header class="toolbar">
+    <div class="toolbar-brand">
+      <span class="brand-icon">🏀</span>
+      <span class="brand-title">Possession QC Tool</span>
+      <span class="badge-web">Web App</span>
+    </div>
+
+    <div class="toolbar-actions">
+      <!-- File Open Group -->
+      <div class="dropdown">
+        <button class="btn btn-primary" id="openMenuBtn">Open ▾</button>
+        <div class="dropdown-menu" id="openDropdown">
+          <button id="openVideoBtn">🎬 Open video file</button>
+          <button id="openJsonBtn">📄 Open JSON mapping</button>
+          <div class="dropdown-divider"></div>
+          <button id="loadDemoBtn">⚡ Load sample demo (video + JSON)</button>
+        </div>
+      </div>
+      <input type="file" id="videoFileInput" accept="video/*" hidden>
+      <input type="file" id="jsonFileInput" accept=".json" hidden>
+
+      <!-- View Menu -->
+      <div class="dropdown">
+        <button class="btn btn-secondary" id="viewMenuBtn">View ▾</button>
+        <div class="dropdown-menu" id="viewDropdown">
+          <button id="fitOverviewBtn">Fit complete timeline to video <kbd>Ctrl+0</kbd></button>
+          <button id="fitDetailBtn">Fit detail timeline to current possession <kbd>Ctrl+1</kbd></button>
+          <div class="dropdown-divider"></div>
+          <label class="menu-checkbox-item">
+            <input type="checkbox" id="followCurrentFrameToggle">
+            <span>Follow current frame</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Save Button -->
+      <button class="btn btn-secondary" id="saveJsonBtn" disabled title="Save JSON mapping (Ctrl+S)">
+        💾 Save JSON <span id="dirtyIndicator" class="dirty-dot hidden">•</span>
+      </button>
+
+      <!-- FPS Selector -->
+      <div class="toolbar-control">
+        <label for="fpsSelect">FPS:</label>
+        <select id="fpsSelect" class="select-input">
+          <option value="auto">Auto (30)</option>
+          <option value="24">24 fps</option>
+          <option value="25">25 fps</option>
+          <option value="29.97">29.97 fps</option>
+          <option value="30" selected>30 fps</option>
+          <option value="50">50 fps</option>
+          <option value="59.94">59.94 fps</option>
+          <option value="60">60 fps</option>
+        </select>
+      </div>
+
+      <button class="btn btn-icon" id="helpBtn" title="Keyboard shortcuts & guide">❓ Help</button>
+    </div>
+  </header>
+
+  <!-- Main Three-Column Layout -->
+  <main class="app-layout">
+    <!-- Left Column: Possession List -->
+    <aside class="panel panel-left" id="possessionPanel">
+      <div class="panel-header">
+        <h2>POSSESSIONS</h2>
+        <span class="count-badge" id="possessionCount">0</span>
+      </div>
+      <div class="possession-list-container">
+        <table class="possession-table" id="possessionTable">
+          <thead>
+            <tr>
+              <th class="col-num">#</th>
+              <th>Start frame</th>
+              <th>End frame</th>
+              <th>Duration</th>
+            </tr>
+          </thead>
+          <tbody id="possessionListBody">
+            <tr class="empty-row">
+              <td colspan="4">No possessions loaded</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </aside>
+
+    <!-- Center Column: Video & Dual Timelines -->
+    <section class="panel panel-center">
+      <!-- Video Surface with State-Colored Border -->
+      <div class="video-border-wrapper" id="videoBorder">
+        <div class="video-container" id="videoDropArea">
+          <video id="videoElement" playsinline preload="auto"></video>
+          <canvas id="demoCanvas" class="demo-canvas hidden"></canvas>
+          <div class="video-placeholder" id="videoPlaceholder">
+            <div class="placeholder-content">
+              <span class="placeholder-icon">🎥</span>
+              <p>Drag & drop match video here</p>
+              <p class="placeholder-sub">or click <strong>Open → Open video file</strong> or <strong>Load sample demo</strong></p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Current Frame & Time Readout -->
+      <div class="time-readout" id="currentReadout">
+        <span class="readout-frame">Current frame —</span>
+        <span class="readout-sep">·</span>
+        <span class="readout-time">00:00.000</span>
+        <span class="readout-fps" id="currentFpsLabel">(30.00 fps)</span>
+      </div>
+
+      <!-- Playback Controls -->
+      <div class="playback-controls">
+        <button class="btn btn-playback" id="seekPrevMinuteBtn" title="−1 minute (Ctrl+←)">−1m</button>
+        <button class="btn btn-playback" id="seekPrevSecBtn" title="−1 second (Shift+←)">−1s</button>
+        <button class="btn btn-playback" id="stepPrevFrameBtn" title="−1 frame (←)">−1 frame</button>
+        <button class="btn btn-playback btn-play-pause" id="playPauseBtn" title="Play / Pause (Space)">▶ Play</button>
+        <button class="btn btn-playback" id="stepNextFrameBtn" title="+1 frame (→)">+1 frame</button>
+        <button class="btn btn-playback" id="seekNextSecBtn" title="+1 second (Shift+→)">+1s</button>
+        <button class="btn btn-playback" id="seekNextMinuteBtn" title="+1 minute (Ctrl+→)">+1m</button>
+
+        <div class="speed-control">
+          <label for="speedSelect">Speed:</label>
+          <select id="speedSelect" class="select-input select-small">
+            <option value="0.25">0.25×</option>
+            <option value="0.5">0.5×</option>
+            <option value="1" selected>1×</option>
+            <option value="1.5">1.5×</option>
+            <option value="2">2×</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Timelines -->
+      <div class="timelines-wrapper">
+        <!-- Overview Timeline -->
+        <div class="timeline-block">
+          <div class="timeline-header">
+            <span class="timeline-title">COMPLETE VIDEO</span>
+            <span class="timeline-meta" id="overviewMeta">0 frames</span>
+          </div>
+          <div class="canvas-wrapper">
+            <canvas id="overviewCanvas" height="54"></canvas>
+          </div>
+        </div>
+
+        <!-- Detail Timeline -->
+        <div class="timeline-block">
+          <div class="timeline-header">
+            <span class="timeline-title">CURRENT POSSESSION + BUFFER</span>
+            <span class="timeline-hint">Wheel zooms around pointer · Double-click fits</span>
+          </div>
+          <div class="canvas-wrapper">
+            <canvas id="detailCanvas" height="96"></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Right Column: Current Possession & Action Panel -->
+    <aside class="panel panel-right" id="actionPanel">
+      <!-- Active Possession Badge -->
+      <div class="active-badge badge-neutral" id="activeBadge">
+        NO ACTIVE POSSESSION
+      </div>
+
+      <!-- Current Possession Details Card -->
+      <div class="details-card">
+        <h3 class="card-heading">CURRENT POSSESSION</h3>
+        <div class="detail-row">
+          <span class="detail-label">Possession #</span>
+          <span class="detail-value" id="detailNum">—</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Start frame</span>
+          <span class="detail-value" id="detailStartFrame">—</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Start time</span>
+          <span class="detail-value" id="detailStartTime">—</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">End frame</span>
+          <span class="detail-value" id="detailEndFrame">—</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">End time</span>
+          <span class="detail-value" id="detailEndTime">—</span>
+        </div>
+        <div class="detail-row highlight-row">
+          <span class="detail-label">Duration</span>
+          <span class="detail-value" id="detailDuration">—</span>
+        </div>
+        <div class="detail-status" id="newPossessionStatus">
+          New possession start: not set
+        </div>
+      </div>
+
+      <!-- Edit Action Buttons -->
+      <div class="action-buttons-group">
+        <button class="btn btn-action btn-create" id="btnToggleNew" title="Start a new possession at the current frame (N)">
+          Start a new possession <kbd>N</kbd>
+        </button>
+        <button class="btn btn-action" id="btnSplit" disabled title="Split the active possession at the current frame (S)">
+          Split <kbd>S</kbd>
+        </button>
+        <div class="btn-grid-2">
+          <button class="btn btn-action" id="btnJoinNext" disabled title="Join the active possession with the next possession (J)">
+            Join next <kbd>J</kbd>
+          </button>
+          <button class="btn btn-action" id="btnJoinPrev" disabled title="Join the previous possession with the active possession (Shift+J)">
+            Join prev <kbd>⇧J</kbd>
+          </button>
+        </div>
+        <button class="btn btn-action" id="btnSetStart" disabled title="Move the active possession start to the current frame ([)">
+          Move active possession start here <kbd>[</kbd>
+        </button>
+        <button class="btn btn-action" id="btnSetEnd" disabled title="Move the active possession end to the current frame (])">
+          Move active possession end here <kbd>]</kbd>
+        </button>
+        <button class="btn btn-action btn-danger" id="btnDelete" disabled title="Delete active possession (Delete)">
+          Delete active possession <kbd>Del</kbd>
+        </button>
+      </div>
+
+      <!-- Keyboard Shortcuts Reference -->
+      <div class="shortcuts-card">
+        <h4 class="shortcuts-heading">KEYBOARD SHORTCUTS</h4>
+        <dl class="shortcuts-list">
+          <div><dt><kbd>Space</kbd></dt><dd>Play / pause</dd></div>
+          <div><dt><kbd>←</kbd> / <kbd>→</kbd></dt><dd>Previous / next frame</dd></div>
+          <div><dt><kbd>⇧←</kbd> / <kbd>⇧→</kbd></dt><dd>Previous / next second</dd></div>
+          <div><dt><kbd>⌃←</kbd> / <kbd>⌃→</kbd></dt><dd>Previous / next minute</dd></div>
+          <div><dt><kbd>↑</kbd> / <kbd>↓</kbd></dt><dd>Previous / next possession</dd></div>
+          <div><dt><kbd>N</kbd></dt><dd>Start / end new possession</dd></div>
+          <div><dt><kbd>S</kbd></dt><dd>Split active possession</dd></div>
+          <div><dt><kbd>J</kbd> / <kbd>⇧J</kbd></dt><dd>Join next / previous</dd></div>
+          <div><dt><kbd>[</kbd> / <kbd>]</kbd></dt><dd>Move start / end here</dd></div>
+          <div><dt><kbd>Del</kbd></dt><dd>Delete active possession</dd></div>
+          <div><dt><kbd>Home</kbd> / <kbd>End</kbd></dt><dd>Go to possession start / end</dd></div>
+          <div><dt><kbd>Esc</kbd></dt><dd>Cancel / clear selection</dd></div>
+        </dl>
+      </div>
+    </aside>
+  </main>
+
+  <!-- Status Bar & Toast Notifications -->
+  <footer class="status-bar">
+    <div class="status-message" id="statusMessage">No video or JSON loaded</div>
+    <div class="status-meta" id="statusMeta">Client-side web app · 100% in-browser</div>
+  </footer>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Help & Shortcuts Modal -->
+  <div class="modal-backdrop hidden" id="helpModal">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3>🏀 Possession QC Tool — Guide & Shortcuts</h3>
+        <button class="modal-close" id="closeHelpModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <h4>Overview</h4>
+        <p>This web application is a frame-accurate quality control tool for basketball match possessions. Everything runs 100% locally in your browser with zero server uploads.</p>
+        
+        <h4>How to Use</h4>
+        <ol>
+          <li>Click <strong>Open → Open video file</strong> (or drop your match MP4/WebM video).</li>
+          <li>Click <strong>Open → Open JSON mapping</strong> to load vision pipeline possessions.</li>
+          <li>Or simply click <strong>Open → Load sample demo</strong> to try it out immediately!</li>
+        </ol>
+
+        <h4>Timeline Controls</h4>
+        <ul>
+          <li><strong>Mouse Wheel</strong> over detail timeline: zooms in and out centered at pointer.</li>
+          <li><strong>Double Click</strong> on timeline: fits view to context.</li>
+          <li><strong>Click</strong> on possession or timeline: jumps directly to that frame.</li>
+          <li><strong>Dragging</strong> the current-frame playhead line scrubs smoothly through video.</li>
+        </ul>
+
+        <h4>Editing Rules</h4>
+        <ul>
+          <li><strong>Create (<kbd>N</kbd>)</strong>: Navigate to start frame, press <kbd>N</kbd>, navigate to end frame, press <kbd>N</kbd> again.</li>
+          <li><strong>Split (<kbd>S</kbd>)</strong>: Position inside an active possession and press <kbd>S</kbd> to split before the current frame.</li>
+          <li><strong>Join (<kbd>J</kbd>)</strong>: Merge active possession with the following possession.</li>
+          <li><strong>Stretch Boundaries (<kbd>[</kbd>, <kbd>]</kbd>)</strong>: Adjust start or end frame to current position.</li>
+          <li><strong>Delete (<kbd>Del</kbd>)</strong>: Remove active possession and auto-renumber.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

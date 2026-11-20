@@ -1,0 +1,38 @@
+[
+  {
+    "possession-num": 1,
+    "start-frame": 30,
+    "start-time": 1.0,
+    "end-frame": 180,
+    "end-time": 6.0,
+    "team": "Team A",
+    "event": "Offensive setup"
+  },
+  {
+    "possession-num": 2,
+    "start-frame": 240,
+    "start-time": 8.0,
+    "end-frame": 450,
+    "end-time": 15.0,
+    "team": "Team B",
+    "event": "Transition defense & steal"
+  },
+  {
+    "possession-num": 3,
+    "start-frame": 510,
+    "start-time": 17.0,
+    "end-frame": 750,
+    "end-time": 25.0,
+    "team": "Team A",
+    "event": "Pick and roll"
+  },
+  {
+    "possession-num": 4,
+    "start-frame": 820,
+    "start-time": 27.33,
+    "end-frame": 1100,
+    "end-time": 36.67,
+    "team": "Team B",
+    "event": "Shot and rebound"
+  }
+]
