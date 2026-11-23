@@ -1,6 +1,6 @@
 /* ==========================================================================
    Possession QC Tool — Web App Stylesheet
-   Designed for sports video QC at 1366x768 and higher resolutions.
+   Designed for sports video QC with maximized video viewport.
    ========================================================================== */
 
 :root {
@@ -59,14 +59,14 @@ html, body {
    ========================================================================== */
 
 .toolbar {
-  height: 48px;
+  height: 44px;
   background-color: var(--bg-surface);
   border-bottom: 1px solid var(--border-subtle);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 16px;
-  gap: 12px;
+  padding: 0 12px;
+  gap: 10px;
   z-index: 100;
   position: relative;
 }
@@ -78,11 +78,11 @@ html, body {
 }
 
 .brand-icon {
-  font-size: 20px;
+  font-size: 18px;
 }
 
 .brand-title {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 700;
   letter-spacing: -0.01em;
   color: var(--text-main);
@@ -92,9 +92,9 @@ html, body {
   background-color: rgba(37, 99, 235, 0.2);
   color: #60a5fa;
   border: 1px solid rgba(96, 165, 250, 0.4);
-  padding: 2px 6px;
+  padding: 1px 5px;
   border-radius: 4px;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 600;
   text-transform: uppercase;
 }
@@ -102,15 +102,15 @@ html, body {
 .toolbar-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .toolbar-control {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   color: var(--text-muted);
-  font-size: 12px;
+  font-size: 11.5px;
 }
 
 /* Buttons */
@@ -118,10 +118,10 @@ html, body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  padding: 6px 12px;
+  gap: 5px;
+  padding: 5px 10px;
   border-radius: 4px;
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 500;
   cursor: pointer;
   border: 1px solid transparent;
@@ -157,10 +157,28 @@ html, body {
   background: transparent;
   color: var(--text-muted);
   border-color: transparent;
+  padding: 4px 6px;
 }
 .btn-icon:hover {
   background-color: var(--bg-surface-elevated);
   color: var(--text-main);
+}
+
+.btn.active {
+  background-color: var(--accent-primary) !important;
+  color: white !important;
+  border-color: var(--accent-primary) !important;
+}
+
+.btn-panel-toggle {
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  color: var(--text-dim);
+}
+.btn-panel-toggle:hover {
+  color: var(--text-main);
+  background-color: var(--bg-surface-elevated);
 }
 
 .dirty-dot {
@@ -200,12 +218,12 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 12px;
+  padding: 7px 10px;
   color: var(--text-main);
   background: transparent;
   border: none;
   border-radius: 4px;
-  font-size: 12px;
+  font-size: 11.5px;
   text-align: left;
   cursor: pointer;
   width: 100%;
@@ -235,8 +253,8 @@ html, body {
   color: var(--text-main);
   border: 1px solid var(--border-subtle);
   border-radius: 4px;
-  padding: 5px 8px;
-  font-size: 12px;
+  padding: 4px 6px;
+  font-size: 11.5px;
   outline: none;
   cursor: pointer;
 }
@@ -244,18 +262,46 @@ html, body {
   border-color: var(--accent-primary);
 }
 .select-small {
-  padding: 3px 6px;
+  padding: 2px 4px;
+  font-size: 11px;
 }
 
 /* ==========================================================================
-   Three-Column Layout
+   Three-Column Layout (Collapsible for Max Screen Space)
    ========================================================================== */
 
 .app-layout {
   display: grid;
-  grid-template-columns: 260px 1fr 290px;
-  height: calc(100vh - 48px - 28px);
+  grid-template-columns: 210px 1fr 240px;
+  height: calc(100vh - 44px - 26px);
   overflow: hidden;
+  transition: grid-template-columns 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+/* Collapsed States */
+.app-layout.collapse-left {
+  grid-template-columns: 0px 1fr 240px;
+}
+.app-layout.collapse-right {
+  grid-template-columns: 210px 1fr 0px;
+}
+.app-layout.theater-mode {
+  grid-template-columns: 0px 1fr 0px;
+}
+
+.app-layout.collapse-left .panel-left,
+.app-layout.theater-mode .panel-left {
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+}
+
+.app-layout.collapse-right .panel-right,
+.app-layout.theater-mode .panel-right {
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
 }
 
 .panel {
@@ -263,20 +309,58 @@ html, body {
   flex-direction: column;
   background-color: var(--bg-app);
   overflow: hidden;
+  transition: opacity 0.18s ease;
+}
+
+/* Floating Expand Tabs */
+.float-tab {
+  position: fixed;
+  top: 50px;
+  z-index: 150;
+  background: rgba(30, 41, 59, 0.95);
+  color: #38bdf8;
+  border: 1px solid var(--border-strong);
+  padding: 5px 9px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+  transition: all 0.15s ease;
+}
+.float-tab:hover {
+  background: var(--accent-primary);
+  color: #ffffff;
+  border-color: var(--accent-primary);
+}
+.float-tab-left {
+  left: 6px;
+  border-radius: 0 4px 4px 0;
+}
+.float-tab-right {
+  right: 6px;
+  border-radius: 4px 0 0 4px;
 }
 
 /* Left Panel: Possession List */
 .panel-left {
   background-color: var(--bg-surface);
   border-right: 1px solid var(--border-subtle);
+  min-width: 0;
 }
 
 .panel-header {
-  padding: 12px 14px;
+  padding: 8px 10px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   border-bottom: 1px solid var(--border-subtle);
+}
+
+.panel-header-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .panel-header h2 {
@@ -289,10 +373,10 @@ html, body {
 .count-badge {
   background-color: var(--bg-surface-elevated);
   color: var(--text-muted);
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 600;
-  padding: 2px 7px;
-  border-radius: 10px;
+  padding: 1px 6px;
+  border-radius: 8px;
 }
 
 .possession-list-container {
@@ -303,7 +387,7 @@ html, body {
 .possession-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 12px;
+  font-size: 11.5px;
   text-align: left;
 }
 
@@ -313,19 +397,19 @@ html, body {
   background-color: var(--bg-surface-elevated);
   color: var(--text-muted);
   font-weight: 600;
-  padding: 7px 8px;
-  font-size: 11px;
+  padding: 5px 6px;
+  font-size: 10.5px;
   border-bottom: 1px solid var(--border-subtle);
   white-space: nowrap;
 }
 
 .possession-table td {
-  padding: 6px 8px;
+  padding: 5px 6px;
   border-bottom: 1px solid rgba(51, 65, 85, 0.4);
   color: var(--text-main);
   white-space: nowrap;
   font-family: var(--font-mono);
-  font-size: 11.5px;
+  font-size: 11px;
 }
 
 .possession-table tbody tr {
@@ -351,35 +435,36 @@ html, body {
 }
 
 .col-num {
-  width: 32px;
+  width: 28px;
   text-align: center;
 }
 
 .empty-row td {
   text-align: center;
   color: var(--text-dim);
-  padding: 24px 8px;
+  padding: 20px 6px;
   font-family: var(--font-family);
 }
 
 /* ==========================================================================
-   Center Panel: Video & Timelines
+   Center Panel: Video & Timelines (Maximized Screen Size)
    ========================================================================== */
 
 .panel-center {
-  padding: 8px 12px;
+  padding: 4px 8px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
   min-width: 0;
+  height: 100%;
 }
 
 .video-border-wrapper {
   flex: 1;
-  min-height: 260px;
+  min-height: 280px;
   background-color: #000;
-  border: 3px solid var(--border-subtle);
-  border-radius: 6px;
+  border: 2px solid var(--border-subtle);
+  border-radius: 4px;
   overflow: hidden;
   display: flex;
   position: relative;
@@ -394,6 +479,17 @@ html, body {
   border-color: var(--status-create) !important;
 }
 
+/* Fullscreen support */
+.video-border-wrapper:fullscreen {
+  border: none;
+  border-radius: 0;
+  background-color: #000;
+}
+.video-border-wrapper:fullscreen .video-container {
+  width: 100vw;
+  height: 100vh;
+}
+
 .video-container {
   width: 100%;
   height: 100%;
@@ -401,7 +497,7 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #0a0a0a;
+  background-color: #000;
 }
 
 #videoElement, #demoCanvas {
@@ -431,11 +527,11 @@ html, body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  padding: 20px;
+  gap: 6px;
+  padding: 16px;
 }
 .placeholder-icon {
-  font-size: 40px;
+  font-size: 36px;
   opacity: 0.8;
 }
 .placeholder-sub {
@@ -443,18 +539,30 @@ html, body {
   color: var(--text-dim);
 }
 
-/* Time Readout */
+/* ==========================================================================
+   Consolidated Video Controls Bar
+   ========================================================================== */
+
+.video-controls-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  padding: 3px 8px;
+  min-height: 32px;
+  flex-shrink: 0;
+}
+
 .time-readout {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 5px;
   font-family: var(--font-mono);
-  font-size: 13px;
-  color: var(--text-main);
-  padding: 4px 6px;
-  background-color: var(--bg-surface);
-  border-radius: 4px;
-  border: 1px solid var(--border-subtle);
+  font-size: 12px;
+  white-space: nowrap;
 }
 
 .readout-frame {
@@ -468,34 +576,32 @@ html, body {
   color: var(--text-main);
 }
 .readout-fps {
-  font-size: 11px;
+  font-size: 10.5px;
   color: var(--text-muted);
-  margin-left: auto;
+  margin-left: 4px;
 }
 
-/* Playback Controls */
 .playback-controls {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 2px 0;
+  gap: 4px;
 }
 
 .btn-playback {
-  background-color: var(--bg-surface);
+  background-color: var(--bg-surface-elevated);
   color: var(--text-main);
   border: 1px solid var(--border-subtle);
-  padding: 6px 11px;
-  font-size: 12px;
+  padding: 3px 7px;
+  font-size: 11px;
+  border-radius: 3px;
 }
 .btn-playback:hover {
-  background-color: var(--bg-surface-elevated);
+  background-color: var(--bg-surface-hover);
   border-color: var(--border-strong);
 }
 
 .btn-play-pause {
-  min-width: 90px;
+  min-width: 76px;
   font-weight: 700;
   background-color: var(--accent-primary);
   border-color: var(--accent-primary);
@@ -505,44 +611,59 @@ html, body {
   background-color: var(--accent-primary-hover);
 }
 
-.speed-control {
-  margin-left: 12px;
+.controls-right-group {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.speed-control {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   color: var(--text-muted);
   font-size: 11px;
 }
 
-/* Timelines */
+.btn-quick-theater, .btn-quick-fs {
+  font-weight: 600;
+  padding: 3px 6px;
+}
+
+/* ==========================================================================
+   Compact Timelines
+   ========================================================================== */
+
 .timelines-wrapper {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
+  flex-shrink: 0;
 }
 
 .timeline-block {
   background-color: var(--timeline-bg);
   border: 1px solid var(--border-subtle);
-  border-radius: 5px;
-  padding: 6px 8px;
+  border-radius: 4px;
+  padding: 3px 6px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 }
 
 .timeline-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 10px;
+  font-size: 9.5px;
   font-weight: 700;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
   color: var(--text-muted);
 }
 
 .timeline-meta, .timeline-hint {
-  font-size: 10px;
+  font-size: 9.5px;
   font-weight: 400;
   color: var(--text-dim);
 }
@@ -555,7 +676,7 @@ html, body {
 .canvas-wrapper canvas {
   width: 100%;
   display: block;
-  border-radius: 3px;
+  border-radius: 2px;
   cursor: crosshair;
 }
 
@@ -566,21 +687,26 @@ html, body {
 .panel-right {
   background-color: var(--bg-surface);
   border-left: 1px solid var(--border-subtle);
-  padding: 12px;
+  padding: 8px 10px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
   overflow-y: auto;
+  min-width: 0;
+}
+
+.right-panel-header {
+  padding: 0 0 6px 0;
 }
 
 /* Active Badge */
 .active-badge {
   text-align: center;
   font-weight: 700;
-  font-size: 12px;
-  letter-spacing: 0.05em;
-  padding: 8px;
-  border-radius: 6px;
+  font-size: 11.5px;
+  letter-spacing: 0.04em;
+  padding: 6px;
+  border-radius: 4px;
   transition: all 0.2s ease;
 }
 
@@ -606,26 +732,26 @@ html, body {
 .details-card {
   background-color: var(--bg-app);
   border: 1px solid var(--border-subtle);
-  border-radius: 6px;
-  padding: 10px;
+  border-radius: 4px;
+  padding: 8px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 
 .card-heading {
-  font-size: 11px;
+  font-size: 10.5px;
   font-weight: 700;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
   color: var(--text-muted);
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 
 .detail-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 11.5px;
+  font-size: 11px;
 }
 
 .detail-label {
@@ -639,7 +765,7 @@ html, body {
 }
 
 .highlight-row {
-  padding-top: 4px;
+  padding-top: 3px;
   border-top: 1px dashed var(--border-subtle);
 }
 .highlight-row .detail-value {
@@ -647,10 +773,10 @@ html, body {
 }
 
 .detail-status {
-  margin-top: 6px;
-  padding-top: 6px;
+  margin-top: 4px;
+  padding-top: 4px;
   border-top: 1px solid var(--border-subtle);
-  font-size: 11px;
+  font-size: 10.5px;
   color: var(--text-dim);
   font-style: italic;
 }
@@ -659,7 +785,7 @@ html, body {
 .action-buttons-group {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 5px;
 }
 
 .btn-action {
@@ -667,8 +793,9 @@ html, body {
   color: var(--text-main);
   border: 1px solid var(--border-strong);
   justify-content: space-between;
-  padding: 8px 10px;
-  font-size: 12px;
+  padding: 6px 8px;
+  font-size: 11.5px;
+  border-radius: 4px;
 }
 .btn-action:hover:not(:disabled) {
   background-color: var(--bg-surface-hover);
@@ -703,7 +830,7 @@ html, body {
 .btn-grid-2 {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 6px;
+  gap: 5px;
 }
 
 kbd {
@@ -712,8 +839,8 @@ kbd {
   border-radius: 3px;
   box-shadow: 0 1px 0 rgba(0, 0, 0, 0.4);
   font-family: var(--font-mono);
-  font-size: 10px;
-  padding: 2px 4px;
+  font-size: 9.5px;
+  padding: 1px 4px;
   color: var(--text-muted);
 }
 
@@ -721,24 +848,24 @@ kbd {
 .shortcuts-card {
   background-color: var(--bg-app);
   border: 1px solid var(--border-subtle);
-  border-radius: 6px;
-  padding: 10px;
+  border-radius: 4px;
+  padding: 8px;
   margin-top: auto;
 }
 
 .shortcuts-heading {
-  font-size: 10px;
+  font-size: 9.5px;
   font-weight: 700;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
   color: var(--text-dim);
-  margin-bottom: 6px;
+  margin-bottom: 4px;
 }
 
 .shortcuts-list {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  font-size: 11px;
+  gap: 3px;
+  font-size: 10.5px;
 }
 
 .shortcuts-list div {
@@ -753,7 +880,7 @@ kbd {
 
 .shortcuts-list dd {
   color: var(--text-muted);
-  font-size: 10.5px;
+  font-size: 10px;
 }
 
 /* ==========================================================================
@@ -761,20 +888,20 @@ kbd {
    ========================================================================== */
 
 .status-bar {
-  height: 28px;
+  height: 26px;
   background-color: var(--bg-surface);
   border-top: 1px solid var(--border-subtle);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 12px;
-  font-size: 11.5px;
+  padding: 0 10px;
+  font-size: 11px;
   color: var(--text-muted);
 }
 
 .status-meta {
   color: var(--text-dim);
-  font-size: 11px;
+  font-size: 10.5px;
 }
 
 /* ==========================================================================
@@ -783,11 +910,11 @@ kbd {
 
 .toast-container {
   position: fixed;
-  bottom: 38px;
-  right: 16px;
+  bottom: 34px;
+  right: 14px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
   z-index: 9999;
   pointer-events: none;
 }
@@ -796,9 +923,9 @@ kbd {
   background-color: var(--bg-surface-elevated);
   border: 1px solid var(--border-strong);
   color: var(--text-main);
-  padding: 8px 14px;
-  border-radius: 6px;
-  font-size: 12px;
+  padding: 7px 12px;
+  border-radius: 5px;
+  font-size: 11.5px;
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
   animation: toastIn 0.2s ease-out;
   pointer-events: auto;
@@ -847,7 +974,7 @@ kbd {
   border: 1px solid var(--border-strong);
   border-radius: 8px;
   width: 90%;
-  max-width: 580px;
+  max-width: 560px;
   max-height: 80vh;
   display: flex;
   flex-direction: column;
@@ -855,7 +982,7 @@ kbd {
 }
 
 .modal-header {
-  padding: 14px 16px;
+  padding: 12px 14px;
   border-bottom: 1px solid var(--border-subtle);
   display: flex;
   align-items: center;
@@ -863,7 +990,7 @@ kbd {
 }
 
 .modal-header h3 {
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 700;
 }
 
@@ -880,29 +1007,29 @@ kbd {
 }
 
 .modal-body {
-  padding: 16px;
+  padding: 14px;
   overflow-y: auto;
   line-height: 1.6;
-  font-size: 12.5px;
+  font-size: 12px;
   color: var(--text-muted);
 }
 
 .modal-body h4 {
   color: var(--text-main);
-  margin: 12px 0 4px 0;
-  font-size: 13px;
+  margin: 10px 0 4px 0;
+  font-size: 12.5px;
 }
 .modal-body h4:first-child {
   margin-top: 0;
 }
 
 .modal-body ul, .modal-body ol {
-  padding-left: 20px;
-  margin-bottom: 8px;
+  padding-left: 18px;
+  margin-bottom: 6px;
 }
 
 .modal-body li {
-  margin-bottom: 4px;
+  margin-bottom: 3px;
 }
 
 .modal-body strong {

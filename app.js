@@ -248,6 +248,11 @@ class App {
     this.loadedFileName = "match-video";
     this.isDemoActive = false;
 
+    // View States (Collapsible panels & Theater / Big Video mode)
+    this.isTheaterMode = false;
+    this.isLeftCollapsed = false;
+    this.isRightCollapsed = false;
+
     // Timeline view windows
     this.detailVisibleStart = 0;
     this.detailVisibleEnd = 0;
@@ -265,11 +270,20 @@ class App {
   }
 
   _initDOMElements() {
+    this.appLayout = document.getElementById("appLayout");
     this.video = document.getElementById("videoElement");
     this.demoCanvas = document.getElementById("demoCanvas");
     this.videoPlaceholder = document.getElementById("videoPlaceholder");
     this.videoBorder = document.getElementById("videoBorder");
     this.videoDropArea = document.getElementById("videoDropArea");
+
+    // Side Panels & Floating Tabs
+    this.possessionPanel = document.getElementById("possessionPanel");
+    this.actionPanel = document.getElementById("actionPanel");
+    this.toggleLeftPanelBtn = document.getElementById("toggleLeftPanelBtn");
+    this.toggleRightPanelBtn = document.getElementById("toggleRightPanelBtn");
+    this.expandLeftTab = document.getElementById("expandLeftTab");
+    this.expandRightTab = document.getElementById("expandRightTab");
 
     // Inputs
     this.videoFileInput = document.getElementById("videoFileInput");
@@ -305,6 +319,12 @@ class App {
     this.btnSetEnd = document.getElementById("btnSetEnd");
     this.btnDelete = document.getElementById("btnDelete");
     this.saveJsonBtn = document.getElementById("saveJsonBtn");
+
+    // Big Video & Fullscreen
+    this.theaterModeBtn = document.getElementById("theaterModeBtn");
+    this.quickTheaterBtn = document.getElementById("quickTheaterBtn");
+    this.fullscreenBtn = document.getElementById("fullscreenBtn");
+    this.quickFullscreenBtn = document.getElementById("quickFullscreenBtn");
 
     // Playback Buttons
     this.playPauseBtn = document.getElementById("playPauseBtn");
@@ -385,6 +405,18 @@ class App {
     });
     this.videoPlaceholder.addEventListener("click", () => this.videoFileInput.click());
 
+    // Big Video / Theater Mode & Fullscreen
+    this.theaterModeBtn.addEventListener("click", () => this.toggleTheaterMode());
+    this.quickTheaterBtn.addEventListener("click", () => this.toggleTheaterMode());
+    this.fullscreenBtn.addEventListener("click", () => this.toggleFullscreen());
+    this.quickFullscreenBtn.addEventListener("click", () => this.toggleFullscreen());
+
+    // Panel Toggle Buttons & Floating Tabs
+    this.toggleLeftPanelBtn.addEventListener("click", () => this.toggleLeftPanel());
+    this.toggleRightPanelBtn.addEventListener("click", () => this.toggleRightPanel());
+    this.expandLeftTab.addEventListener("click", () => this.toggleLeftPanel(false));
+    this.expandRightTab.addEventListener("click", () => this.toggleRightPanel(false));
+
     // Playback Controls
     this.playPauseBtn.addEventListener("click", () => this.togglePlayPause());
     this.stepPrevFrameBtn.addEventListener("click", () => this.stepFrame(-1));
@@ -447,6 +479,89 @@ class App {
         e.returnValue = "You have unsaved possession mapping changes.";
       }
     });
+  }
+
+  // ==========================================================================
+  // Layout Management: Big Video & Fullscreen
+  // ==========================================================================
+
+  toggleTheaterMode() {
+    this.isTheaterMode = !this.isTheaterMode;
+    if (this.isTheaterMode) {
+      this.isLeftCollapsed = true;
+      this.isRightCollapsed = true;
+      this.appLayout.classList.add("theater-mode");
+      this.appLayout.classList.remove("collapse-left", "collapse-right");
+      this.expandLeftTab.classList.remove("hidden");
+      this.expandRightTab.classList.remove("hidden");
+      this.theaterModeBtn.classList.add("active");
+      this.quickTheaterBtn.classList.add("active");
+      this.showToast("📺 Big Video Mode enabled (Side panels collapsed). Press T to restore.", "info");
+    } else {
+      this.isLeftCollapsed = false;
+      this.isRightCollapsed = false;
+      this.appLayout.classList.remove("theater-mode", "collapse-left", "collapse-right");
+      this.expandLeftTab.classList.add("hidden");
+      this.expandRightTab.classList.add("hidden");
+      this.theaterModeBtn.classList.remove("active");
+      this.quickTheaterBtn.classList.remove("active");
+      this.showToast("Standard View restored.", "info");
+    }
+
+    setTimeout(() => {
+      this.renderOverviewTimeline();
+      this.renderDetailTimeline();
+    }, 240);
+  }
+
+  toggleFullscreen() {
+    if (!document.fullscreenElement) {
+      if (this.videoBorder.requestFullscreen) {
+        this.videoBorder.requestFullscreen();
+      } else if (this.video.requestFullscreen) {
+        this.video.requestFullscreen();
+      }
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      }
+    }
+  }
+
+  toggleLeftPanel(forceState = null) {
+    this.isLeftCollapsed = forceState != null ? forceState : !this.isLeftCollapsed;
+    this.appLayout.classList.toggle("collapse-left", this.isLeftCollapsed);
+    this.expandLeftTab.classList.toggle("hidden", !this.isLeftCollapsed);
+
+    if (!this.isLeftCollapsed && this.isTheaterMode) {
+      this.isTheaterMode = false;
+      this.appLayout.classList.remove("theater-mode");
+      this.theaterModeBtn.classList.remove("active");
+      this.quickTheaterBtn.classList.remove("active");
+    }
+
+    setTimeout(() => {
+      this.renderOverviewTimeline();
+      this.renderDetailTimeline();
+    }, 240);
+  }
+
+  toggleRightPanel(forceState = null) {
+    this.isRightCollapsed = forceState != null ? forceState : !this.isRightCollapsed;
+    this.appLayout.classList.toggle("collapse-right", this.isRightCollapsed);
+    this.expandRightTab.classList.toggle("hidden", !this.isRightCollapsed);
+
+    if (!this.isRightCollapsed && this.isTheaterMode) {
+      this.isTheaterMode = false;
+      this.appLayout.classList.remove("theater-mode");
+      this.theaterModeBtn.classList.remove("active");
+      this.quickTheaterBtn.classList.remove("active");
+    }
+
+    setTimeout(() => {
+      this.renderOverviewTimeline();
+      this.renderDetailTimeline();
+    }, 240);
   }
 
   // ==========================================================================
@@ -656,6 +771,34 @@ class App {
     if (e.key === "Delete" || e.key === "Backspace") {
       e.preventDefault();
       this.deleteCurrentPossession();
+      return;
+    }
+
+    // T: Toggle Big Video / Theater Mode
+    if (e.key.toLowerCase() === "t") {
+      e.preventDefault();
+      this.toggleTheaterMode();
+      return;
+    }
+
+    // F: Toggle Fullscreen
+    if (e.key.toLowerCase() === "f") {
+      e.preventDefault();
+      this.toggleFullscreen();
+      return;
+    }
+
+    // P: Toggle Left Panel (Possessions)
+    if (e.key.toLowerCase() === "p") {
+      e.preventDefault();
+      this.toggleLeftPanel();
+      return;
+    }
+
+    // A: Toggle Right Panel (Actions)
+    if (e.key.toLowerCase() === "a") {
+      e.preventDefault();
+      this.toggleRightPanel();
       return;
     }
   }
@@ -1110,7 +1253,7 @@ class App {
     this.activeBadge.classList.remove("badge-neutral", "badge-active", "badge-creating");
     if (isCreating) {
       this.activeBadge.classList.add("badge-creating");
-      this.activeBadge.textContent = `CREATING NEW POSSESSION (FROM FRAME ${this.newPossessionStartFrame})`;
+      this.activeBadge.textContent = `CREATING NEW (FROM FRAME ${this.newPossessionStartFrame})`;
     } else if (active) {
       this.activeBadge.classList.add("badge-active");
       this.activeBadge.textContent = `ACTIVE POSSESSION: #${active.possession_num}`;
@@ -1126,7 +1269,7 @@ class App {
       this.detailStartTime.textContent = `${formatTimestamp(selected.start_time)}`;
       this.detailEndFrame.textContent = `${selected.end_frame}`;
       this.detailEndTime.textContent = `${formatTimestamp(selected.end_time)}`;
-      this.detailDuration.textContent = `${selected.duration_frames} frames (${formatTimestamp(selected.duration_time)})`;
+      this.detailDuration.textContent = `${selected.duration_frames}f (${formatTimestamp(selected.duration_time)})`;
     } else {
       this.detailNum.textContent = "—";
       this.detailStartFrame.textContent = "—";
@@ -1220,12 +1363,12 @@ class App {
     const rect = canvas.getBoundingClientRect();
     const dpr = window.devicePixelRatio || 1;
 
-    canvas.width = rect.width * dpr;
-    canvas.height = 54 * dpr;
-    ctx.scale(dpr, dpr);
-
     const w = rect.width;
-    const h = 54;
+    const h = 32;
+
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+    ctx.scale(dpr, dpr);
 
     // Clear & background
     ctx.fillStyle = "#0b1120";
@@ -1234,8 +1377,8 @@ class App {
     if (this.totalFrames <= 0) return;
 
     // Track baseline
-    const trackY = 14;
-    const trackH = 26;
+    const trackY = 7;
+    const trackH = 18;
     ctx.fillStyle = "#1e293b";
     ctx.fillRect(0, trackY, w, trackH);
 
@@ -1260,13 +1403,13 @@ class App {
       const blockW = Math.max(2, x2 - x1);
 
       ctx.fillStyle = (i === this.selectedIndex) ? "#60a5fa" : "#2563eb";
-      ctx.fillRect(x1, trackY + 2, blockW, trackH - 4);
+      ctx.fillRect(x1, trackY + 1, blockW, trackH - 2);
 
       // Possession label if wide enough
       if (blockW > 16) {
         ctx.fillStyle = "#ffffff";
-        ctx.font = "bold 9px var(--font-family)";
-        ctx.fillText(`P${p.possession_num}`, x1 + 3, trackY + 16);
+        ctx.font = "bold 8.5px var(--font-family)";
+        ctx.fillText(`P${p.possession_num}`, x1 + 2, trackY + 12);
       }
     }
 
@@ -1294,7 +1437,7 @@ class App {
     ctx.beginPath();
     ctx.moveTo(needleX - 4, 0);
     ctx.lineTo(needleX + 4, 0);
-    ctx.lineTo(needleX, 6);
+    ctx.lineTo(needleX, 5);
     ctx.closePath();
     ctx.fill();
   }
@@ -1305,12 +1448,12 @@ class App {
     const rect = canvas.getBoundingClientRect();
     const dpr = window.devicePixelRatio || 1;
 
-    canvas.width = rect.width * dpr;
-    canvas.height = 96 * dpr;
-    ctx.scale(dpr, dpr);
-
     const w = rect.width;
-    const h = 96;
+    const h = 64;
+
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+    ctx.scale(dpr, dpr);
 
     // Background
     ctx.fillStyle = "#080d1a";
@@ -1326,17 +1469,17 @@ class App {
     const range = Math.max(1, this.detailVisibleEnd - this.detailVisibleStart);
     const xForFrame = (f) => ((f - this.detailVisibleStart) / range) * w;
 
-    // Draw Ruler & Tick Marks
+    // Draw Ruler & Tick Marks (Compact)
     const tickInterval = range > 300 ? 30 : (range > 100 ? 10 : (range > 40 ? 5 : 1));
     const startTick = Math.floor(this.detailVisibleStart / tickInterval) * tickInterval;
 
-    ctx.font = "10px var(--font-mono)";
+    ctx.font = "9px var(--font-mono)";
     for (let f = startTick; f <= this.detailVisibleEnd; f += tickInterval) {
       const tx = xForFrame(f);
       if (tx < 0 || tx > w) continue;
 
       const isMajor = (f % (tickInterval * 2) === 0);
-      const tickH = isMajor ? 12 : 6;
+      const tickH = isMajor ? 8 : 4;
 
       ctx.strokeStyle = isMajor ? "#475569" : "#334155";
       ctx.lineWidth = 1;
@@ -1347,13 +1490,13 @@ class App {
 
       if (isMajor && range < 500) {
         ctx.fillStyle = "#94a3b8";
-        ctx.fillText(String(f), tx + 2, 18);
+        ctx.fillText(String(f), tx + 2, 12);
       }
     }
 
     // Possession Track Area
-    const trackY = 28;
-    const trackH = 46;
+    const trackY = 16;
+    const trackH = 38;
 
     // Possessions
     for (let i = 0; i < this.possessions.length; i++) {
@@ -1378,17 +1521,17 @@ class App {
 
       // Start & End boundary brackets
       ctx.fillStyle = "#93c5fd";
-      ctx.fillRect(x1, trackY, 3, trackH);
-      ctx.fillRect(x2 - 3, trackY, 3, trackH);
+      ctx.fillRect(x1, trackY, 2.5, trackH);
+      ctx.fillRect(x2 - 2.5, trackY, 2.5, trackH);
 
       // Text label inside block
-      if (blockW > 40) {
+      if (blockW > 35) {
         ctx.fillStyle = "#ffffff";
-        ctx.font = "bold 11px var(--font-family)";
-        ctx.fillText(`Possession #${p.possession_num}`, x1 + 6, trackY + 18);
-        ctx.font = "10px var(--font-mono)";
+        ctx.font = "bold 10px var(--font-family)";
+        ctx.fillText(`P#${p.possession_num}`, x1 + 5, trackY + 15);
+        ctx.font = "9px var(--font-mono)";
         ctx.fillStyle = "#dbeafe";
-        ctx.fillText(`${p.duration_frames}f (${formatTimestamp(p.duration_time)})`, x1 + 6, trackY + 34);
+        ctx.fillText(`${p.duration_frames}f (${formatTimestamp(p.duration_time)})`, x1 + 5, trackY + 28);
       }
     }
 
@@ -1407,8 +1550,8 @@ class App {
       ctx.strokeRect(nx1, trackY, nw, trackH);
 
       ctx.fillStyle = "#ffffff";
-      ctx.font = "bold 11px var(--font-family)";
-      ctx.fillText(`New Possession (${end - start + 1}f)`, nx1 + 6, trackY + 24);
+      ctx.font = "bold 10px var(--font-family)";
+      ctx.fillText(`New (${end - start + 1}f)`, nx1 + 5, trackY + 20);
     }
 
     // Current frame vertical needle
@@ -1423,16 +1566,16 @@ class App {
     // Triangle cap
     ctx.fillStyle = "#facc15";
     ctx.beginPath();
-    ctx.moveTo(needleX - 6, 0);
-    ctx.lineTo(needleX + 6, 0);
-    ctx.lineTo(needleX, 10);
+    ctx.moveTo(needleX - 5, 0);
+    ctx.lineTo(needleX + 5, 0);
+    ctx.lineTo(needleX, 7);
     ctx.closePath();
     ctx.fill();
 
     // Frame tag at needle base
     ctx.fillStyle = "#facc15";
-    ctx.font = "bold 10px var(--font-mono)";
-    ctx.fillText(`f${this.currentFrame}`, needleX + 4, h - 4);
+    ctx.font = "bold 9px var(--font-mono)";
+    ctx.fillText(`f${this.currentFrame}`, needleX + 3, h - 3);
   }
 
   // ==========================================================================

@@ -48,6 +48,14 @@
         💾 Save JSON <span id="dirtyIndicator" class="dirty-dot hidden">•</span>
       </button>
 
+      <!-- Big Video (Theater) & Fullscreen Toggles -->
+      <button class="btn btn-secondary" id="theaterModeBtn" title="Big Video / Theater Mode (T)">
+        📺 Big Video
+      </button>
+      <button class="btn btn-secondary" id="fullscreenBtn" title="Fullscreen (F)">
+        ⛶ Fullscreen
+      </button>
+
       <!-- FPS Selector -->
       <div class="toolbar-control">
         <label for="fpsSelect">FPS:</label>
@@ -67,13 +75,24 @@
     </div>
   </header>
 
+  <!-- Floating Uncollapse Tabs (Visible when panels are collapsed) -->
+  <button class="float-tab float-tab-left hidden" id="expandLeftTab" title="Show Possessions Panel (P)">
+    ▶ Possessions
+  </button>
+  <button class="float-tab float-tab-right hidden" id="expandRightTab" title="Show Actions Panel (A)">
+    ◀ Actions
+  </button>
+
   <!-- Main Three-Column Layout -->
-  <main class="app-layout">
+  <main class="app-layout" id="appLayout">
     <!-- Left Column: Possession List -->
     <aside class="panel panel-left" id="possessionPanel">
       <div class="panel-header">
-        <h2>POSSESSIONS</h2>
-        <span class="count-badge" id="possessionCount">0</span>
+        <div class="panel-header-title">
+          <h2>POSSESSIONS</h2>
+          <span class="count-badge" id="possessionCount">0</span>
+        </div>
+        <button class="btn btn-icon btn-panel-toggle" id="toggleLeftPanelBtn" title="Collapse panel (P)">◀</button>
       </div>
       <div class="possession-list-container">
         <table class="possession-table" id="possessionTable">
@@ -96,7 +115,7 @@
 
     <!-- Center Column: Video & Dual Timelines -->
     <section class="panel panel-center">
-      <!-- Video Surface with State-Colored Border -->
+      <!-- Video Surface with State-Colored Border (Maximized Size) -->
       <div class="video-border-wrapper" id="videoBorder">
         <div class="video-container" id="videoDropArea">
           <video id="videoElement" playsinline preload="auto"></video>
@@ -111,37 +130,45 @@
         </div>
       </div>
 
-      <!-- Current Frame & Time Readout -->
-      <div class="time-readout" id="currentReadout">
-        <span class="readout-frame">Current frame —</span>
-        <span class="readout-sep">·</span>
-        <span class="readout-time">00:00.000</span>
-        <span class="readout-fps" id="currentFpsLabel">(30.00 fps)</span>
-      </div>
+      <!-- Compact Consolidated Video Controls Bar -->
+      <div class="video-controls-bar">
+        <!-- Current Frame & Time Readout -->
+        <div class="time-readout" id="currentReadout">
+          <span class="readout-frame">Current frame —</span>
+          <span class="readout-sep">·</span>
+          <span class="readout-time">00:00.000</span>
+          <span class="readout-fps" id="currentFpsLabel">(30.00 fps)</span>
+        </div>
 
-      <!-- Playback Controls -->
-      <div class="playback-controls">
-        <button class="btn btn-playback" id="seekPrevMinuteBtn" title="−1 minute (Ctrl+←)">−1m</button>
-        <button class="btn btn-playback" id="seekPrevSecBtn" title="−1 second (Shift+←)">−1s</button>
-        <button class="btn btn-playback" id="stepPrevFrameBtn" title="−1 frame (←)">−1 frame</button>
-        <button class="btn btn-playback btn-play-pause" id="playPauseBtn" title="Play / Pause (Space)">▶ Play</button>
-        <button class="btn btn-playback" id="stepNextFrameBtn" title="+1 frame (→)">+1 frame</button>
-        <button class="btn btn-playback" id="seekNextSecBtn" title="+1 second (Shift+→)">+1s</button>
-        <button class="btn btn-playback" id="seekNextMinuteBtn" title="+1 minute (Ctrl+→)">+1m</button>
+        <!-- Playback Controls -->
+        <div class="playback-controls">
+          <button class="btn btn-playback" id="seekPrevMinuteBtn" title="−1 minute (Ctrl+←)">−1m</button>
+          <button class="btn btn-playback" id="seekPrevSecBtn" title="−1 second (Shift+←)">−1s</button>
+          <button class="btn btn-playback" id="stepPrevFrameBtn" title="−1 frame (←)">−1f</button>
+          <button class="btn btn-playback btn-play-pause" id="playPauseBtn" title="Play / Pause (Space)">▶ Play</button>
+          <button class="btn btn-playback" id="stepNextFrameBtn" title="+1 frame (→)">+1f</button>
+          <button class="btn btn-playback" id="seekNextSecBtn" title="+1 second (Shift+→)">+1s</button>
+          <button class="btn btn-playback" id="seekNextMinuteBtn" title="+1 minute (Ctrl+→)">+1m</button>
+        </div>
 
-        <div class="speed-control">
-          <label for="speedSelect">Speed:</label>
-          <select id="speedSelect" class="select-input select-small">
-            <option value="0.25">0.25×</option>
-            <option value="0.5">0.5×</option>
-            <option value="1" selected>1×</option>
-            <option value="1.5">1.5×</option>
-            <option value="2">2×</option>
-          </select>
+        <!-- Speed & Quick View Actions -->
+        <div class="controls-right-group">
+          <div class="speed-control">
+            <label for="speedSelect">Speed:</label>
+            <select id="speedSelect" class="select-input select-small">
+              <option value="0.25">0.25×</option>
+              <option value="0.5">0.5×</option>
+              <option value="1" selected>1×</option>
+              <option value="1.5">1.5×</option>
+              <option value="2">2×</option>
+            </select>
+          </div>
+          <button class="btn btn-playback btn-quick-theater" id="quickTheaterBtn" title="Toggle Big Video (T)">📺 Big</button>
+          <button class="btn btn-playback btn-quick-fs" id="quickFullscreenBtn" title="Toggle Fullscreen (F)">⛶</button>
         </div>
       </div>
 
-      <!-- Timelines -->
+      <!-- Timelines (Compact Heights) -->
       <div class="timelines-wrapper">
         <!-- Overview Timeline -->
         <div class="timeline-block">
@@ -150,7 +177,7 @@
             <span class="timeline-meta" id="overviewMeta">0 frames</span>
           </div>
           <div class="canvas-wrapper">
-            <canvas id="overviewCanvas" height="54"></canvas>
+            <canvas id="overviewCanvas" height="32"></canvas>
           </div>
         </div>
 
@@ -158,10 +185,10 @@
         <div class="timeline-block">
           <div class="timeline-header">
             <span class="timeline-title">CURRENT POSSESSION + BUFFER</span>
-            <span class="timeline-hint">Wheel zooms around pointer · Double-click fits</span>
+            <span class="timeline-hint">Wheel zooms · Double-click fits</span>
           </div>
           <div class="canvas-wrapper">
-            <canvas id="detailCanvas" height="96"></canvas>
+            <canvas id="detailCanvas" height="64"></canvas>
           </div>
         </div>
       </div>
@@ -169,6 +196,11 @@
 
     <!-- Right Column: Current Possession & Action Panel -->
     <aside class="panel panel-right" id="actionPanel">
+      <div class="panel-header right-panel-header">
+        <h2>ACTIONS & DETAILS</h2>
+        <button class="btn btn-icon btn-panel-toggle" id="toggleRightPanelBtn" title="Collapse panel (A)">▶</button>
+      </div>
+
       <!-- Active Possession Badge -->
       <div class="active-badge badge-neutral" id="activeBadge">
         NO ACTIVE POSSESSION
@@ -247,7 +279,8 @@
           <div><dt><kbd>J</kbd> / <kbd>⇧J</kbd></dt><dd>Join next / previous</dd></div>
           <div><dt><kbd>[</kbd> / <kbd>]</kbd></dt><dd>Move start / end here</dd></div>
           <div><dt><kbd>Del</kbd></dt><dd>Delete active possession</dd></div>
-          <div><dt><kbd>Home</kbd> / <kbd>End</kbd></dt><dd>Go to possession start / end</dd></div>
+          <div><dt><kbd>T</kbd></dt><dd>Toggle Big Video mode</dd></div>
+          <div><dt><kbd>F</kbd></dt><dd>Toggle Fullscreen</dd></div>
           <div><dt><kbd>Esc</kbd></dt><dd>Cancel / clear selection</dd></div>
         </dl>
       </div>
@@ -273,6 +306,9 @@
         <h4>Overview</h4>
         <p>This web application is a frame-accurate quality control tool for basketball match possessions. Everything runs 100% locally in your browser with zero server uploads.</p>
         
+        <h4>Maximizing the Video</h4>
+        <p>Press <kbd>T</kbd> or click <strong>📺 Big Video</strong> to expand the video screen by collapsing the side panels. Press <kbd>F</kbd> for Fullscreen mode.</p>
+
         <h4>How to Use</h4>
         <ol>
           <li>Click <strong>Open → Open video file</strong> (or drop your match MP4/WebM video).</li>
